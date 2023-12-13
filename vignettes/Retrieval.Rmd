@@ -1,0 +1,94 @@
+---
+title: "2. Retrieving"
+
+package: VariantFinder
+#output: rmarkdown::html_vignette
+output:
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{2. Retrieving}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  warning=FALSE, 
+  message=FALSE,
+  comment = "#>"
+)
+```
+
+
+
+
+# VariantFinder_GetVariantsbyGene 
+
+
+**Arguments** | **Description**
+-----|-----
+variant.ann| is the data.frame of the annotated variants downloaded from MMRF-Commpass Researcher Gateway
+ListGene| is the list of the genes to analyze
+
+<div class="panel panel-warning">
+<div class="panel-heading"><a name="Datasets">Example</a> </div>
+<div class="panel-body">
+
+variants.list<-VariantFinder_GetVariantsbyGene(variant.ann, ListGene)
+
+
+</div>
+</div>
+
+
+# VariantFinder_PlotVariantsbyGene 
+
+**Arguments** | **Description**
+-----|-----
+variant.ann| is the data.frame of the annotated variants downloaded from MMRF-Commpass Researcher Gateway
+ListGene| is the list of the genes to analyze
+topN| is the top number of variant count to visualize
+filenm| is the name of the png file. If filenm is Null, the plot is draw but it is not saved
+height| Image height
+width| Image width
+
+
+<div class="panel panel-warning">
+<div class="panel-heading"><a name="Datasets">Example</a> </div>
+<div class="panel-body">
+
+variants.plot<-VariantFinder_PlotVariantsbyGene(variant.ann, ListGene)
+
+</div>
+</div>
+
+
+
+
+# VariantFinder_PlotbyEffectImpact 
+**Arguments** | **Description**
+-----|-----
+variant.ann| is the data.frame of the annotated variants downloaded from MMRF-Commpass Researcher Gateway
+ListSNP| is the list of the SNPs to analyze.
+topN| is the top number of variant count to visualize
+filenm| is the name of the png file. If filenm is Null, the plot is draw but it is not saved
+height| Image height
+width| Image width
+
+
+
+<div class="panel panel-warning">
+<div class="panel-heading"><a name="Datasets">Example</a> </div>
+<div class="panel-body">
+
+summary.plot<-VariantFinder_PlotbyEffectImpact(variant.ann,topN=50,height=10, width=15, filenm="PlotbyEffect")
+
+
+</div>
+</div>
+
+
+
+
+
+

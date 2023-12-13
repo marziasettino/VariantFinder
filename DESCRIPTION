@@ -1,0 +1,63 @@
+Package: VariantFinder
+Type: Package
+Title: R package for variant analysis from MMRF-CoMMpass data source
+Version: 2.0.0
+Author: Marzia Settino
+Maintainer: Marzia Settino <marzia.settino@unicz.it>
+Description: VariantFinder is developed with the aim of performing an 
+             integrative analysis on MM data sourcing from 
+             MMRF Research Gateway.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+Imports:
+    jsonlite,
+    downloader (>= 0.4),
+    survminer,
+    grDevices,
+    dplyr,
+    gridExtra,
+    graphics,
+    tibble,
+    grid,
+    XML (>= 3.98.0),
+    data.table,
+    edgeR (>= 3.0.0),
+    jsonlite (>= 1.0.0),
+    plyr,
+    knitr,
+    methods,
+    ggplot2,
+    ggthemes,
+    survival,
+    stringr (>= 1.0.0),
+    scales,
+    rvest (>= 0.3.0),
+    stats,
+    utils,
+    selectr,
+    S4Vectors,
+    readr,
+    RColorBrewer,
+    doParallel,
+    parallel,
+    tools,
+    tidyr,
+    sva,
+    limma,
+    GenomicFeatures,
+    purrr,
+    xml2,
+    httr (>= 1.2.1),
+    ggrepel (>= 0.6.3),
+    ggpubr
+Suggests: 
+    knitr,
+    rmarkdown,
+    BiocStyle,
+    devtools,
+    testthat
+VignetteBuilder: knitr
+RoxygenNote: 7.2.3
+Depends: 
+    R (>= 2.10)

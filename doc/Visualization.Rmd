@@ -1,0 +1,536 @@
+---
+title: "4. Case Study"
+
+package: MMRFVariant
+#output: rmarkdown::html_vignette
+output:
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{4. Case Study}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  warning=FALSE, 
+  message=FALSE,
+  comment = "#>"
+)
+```
+
+
+```{r, echo = FALSE,hide=TRUE, message=FALSE,warning=FALSE}
+devtools::load_all(".")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(dplyr)
+library(DT)
+library(ggplot2)
+library(stringr)
+library(ggpubr)
+```
+
+# Preliminary steps (Downloading and Importing datasets)
+
+<div class="panel panel-info">
+<div class="panel-heading"><a name="Datasets">Preliminary steps  </a> </div>
+<div class="panel-body">
+
+Downloading and importing MMRF-RG datasets:
+
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+patient<-MMRF_CoMMpass_IA15_PER_PATIENT
+
+trt<-MMRF_CoMMpass_IA15_STAND_ALONE_TRTRESP
+
+variant.ann<-MMRF_CoMMpass_IA15a_All_Canonical_Variants
+
+```
+
+
+</div>
+</div>
+
+
+
+
+
+
+
+
+
+# Analyze the topN recurrent variants in the complete samples cohort 
+
+
+## Heatmap of the N# of variants occurrence in the complete samples cohort
+
+
+
+<div class="panel panel-info">
+<div class="panel-heading"><b>MMRFVariant_PlotVariantsbyGene</b></div>
+<div class="panel-body">
+
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+variants.plot.all<-MMRFVariant_PlotVariantsbyGene(variant.ann,height=10, width=20,topN=10,
+                                                  
+                                                  filenm="PlotVariantsbyGene_heatmapAll")
+
+```
+
+```{r figurename="PlotVariantsbyGene_heatmap", echo=FALSE, fig.cap="Heatmap of the N# of variants occurrence in the complete cohort", out.width = '90%'}
+knitr::include_graphics("imgs/PlotVariantsbyGene_heatmap_all.png")
+```
+
+</div>
+</div>
+
+
+## Get the list of variants found in the in the complete samples cohort ranked by the occurrence number
+
+<div class="panel panel-info">
+<div class="panel-heading"><b>MMRFVariant_GetVariantsbyGene</b></div>
+<div class="panel-body">
+
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+ListSNPs.all<-MMRFVariant_GetVariantsbyGene(variant.ann)
+
+
+ListSNPs.all<-ListSNPs.all[order(ListSNPs.all$count, decreasing = TRUE),]
+
+ListSNPs.all.10<-head(unique(ListSNPs.all),10)
+
+```
+
+
+```{r  echo=TRUE, message=FALSE, warning=FALSE}
+datatable(as.data.frame(ListSNPs.all.10), 
+              options = list(scrollX = TRUE, keys = TRUE, pageLength = 5), 
+              rownames = FALSE)
+
+
+
+```
+
+</div>
+</div>
+
+
+
+
+
+
+
+
+## Perform the impact table (ordered by ascending SIFT and descending Poliphen-2)
+<div class="panel panel-info">
+<div class="panel-heading"><b>MMRFVariant_GetImpact</b></div>
+<div class="panel-body">
+
+For semplification purposes, we visualize a subset of columns and rows.
+
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+
+impact.table.all<-MMRFVariant_GetImpact(variant.ann,ListSNPs.all$dbSNP)
+
+impact.table.all.sub<-dplyr::select(impact.table.all,dbSNP,Gene,REF,ALT,feature,Effect,
+                                SIFT_Impact,Polyphen_Impact,Impact)
+
+head(unique(impact.table.all.sub),10)
+
+
+```
+
+
+```{r figurename="ImpactTableAll", echo=FALSE, fig.cap="Impact table of each SNP in ListGene", out.width = '90%'}
+knitr::include_graphics("imgs/ImpactTableAll.png")
+```
+
+</div>
+</div>
+
+## Perform the Impact-Effect plot
+
+
+<div class="panel panel-info">
+<div class="panel-heading"><b>MMRFVariant_PlotbyEffectImpact</b></div>
+<div class="panel-body">
+
+
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+
+ListSNPs.all.100<-head(ListSNPs.bycount.all$dbSNP,100)
+
+plot.impact.effect.all<-MMRFVariant_PlotbyEffectImpact(variant.ann,ListSNPs.all.100,topN=3,height=20, 
+                                                   width=30, filenm="PlotbyEffectImpactAll")
+
+```
+
+
+
+```{r figurename="ImpactTableAll", echo=FALSE, fig.cap="Impact table of each SNP in ListGene", out.width = '90%'}
+knitr::include_graphics("imgs/PlotbyEffectImpactAll.png")
+```
+
+</div>
+</div>
+
+
+
+# Prioritizing variants in a known Multiple Myeloma (MM) disease-causing gene set
+
+The six gene-signature including the genes KRAS, NRAS, TP53, FAM46C, DIS3, BRAF have a high recurrence rate and may play important roles in the pathogenesis, progression and prognosis of MM. 
+This case study shows how MMRFVariant performs the integrative analysis of variants in that six gene-signature to prioritize pathogenic variants involved in the MM.
+
+The Figure below shows the workflow that describes graphically step by step the procedure carried out to perform this case of study. </br>
+
+```{r figurename="workflow", echo=FALSE, fig.cap="The workflow describes graphically step by step the procedure carried out to perform this case of study ", out.width = '99%'}
+knitr::include_graphics("imgs/workflow.png")
+```
+
+
+
+
+## Set the list of gene "ListGene" to explore 
+
+
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+ListGene<-c("KRAS", "NRAS","TP53","FAM46C","DIS3","BRAF")
+
+
+```
+## Draw the Heatmap of the N# of variants occurring in "ListGene" 
+
+
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+
+variants.plot<-MMRFVariant_PlotVariantsbyGene(variant.ann,ListGene,height=15,
+                                              width=20,topN=50,
+                                              filenm="PlotVariantsbyGene_heatmap")
+
+
+
+
+
+
+
+```
+
+
+
+```{r figurename="workflow", echo=FALSE, fig.cap="The workflow describes graphically step by step the procedure carried out to perform this case of study ", out.width = '99%'}
+knitr::include_graphics("imgs/PlotVariantsbyGene_heatmap.png")
+```
+
+
+
+
+
+
+## Get the list of Variants found in the gene set <ListGene>
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+
+ListSNPs<-MMRFVariant_GetVariantsbyGene(variant.ann, ListGene)
+
+head(ListSNPs,20)
+```
+
+```{r  echo=TRUE, message=FALSE, warning=FALSE}
+datatable(as.data.frame(ListSNPs), 
+              options = list(scrollX = TRUE, keys = TRUE, pageLength = 5), 
+              rownames = FALSE)
+
+
+
+```
+
+
+
+
+
+## Plot the Impact-Effect of Variants 
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+plot.impact.effect<-MMRFVariant_PlotbyEffectImpact(variant.ann,ListSNPs,topN=50,height=30, 
+                                                   width=15, filenm="PlotbyEffectImpact")
+
+```
+
+
+
+
+```{r figurename="workflow", echo=FALSE, fig.cap="MMRFVariant_PlotbyEffectImpact plot ", out.width = '99%'}
+knitr::include_graphics("imgs/PlotbyEffectImpact.png")
+```
+
+
+
+
+
+## Perform the impact table (ordered by ascending SIFT and descending Poliphen-2)
+
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+impact.table<-MMRFVariant_GetImpact(variant.ann,ListSNPs)
+
+```
+For semplification purposes, we visualize a subset of columns and rows
+
+
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+
+
+impact.table.sub<-dplyr::select(impact.table,dbSNP,Gene,REF,ALT,feature,Effect,
+                                SIFT_Impact,Polyphen_Impact,Impact)
+
+head(unique(impact.table.sub),10)
+
+
+```
+
+
+
+```{r figurename="ImpactTable", echo=FALSE, fig.cap="Impact table of each SNP in ListGene", out.width = '90%'}
+knitr::include_graphics("imgs/ImpactTable.png")
+```
+
+
+## Focusing on NRAS gene
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+
+
+ListSNPs_NRAS<-MMRFVariant_GetVariantsbyGene(variant.ann,"NRAS")
+
+
+```
+
+
+```{r  echo=TRUE, message=FALSE, warning=FALSE}
+datatable(as.data.frame(ListSNPs_NRAS), 
+              options = list(scrollX = TRUE, keys = TRUE, pageLength = 5), 
+              rownames = FALSE)
+
+
+
+```
+
+
+
+
+
+
+We take into account only the top five SNPs by occurrence (see <KRAS_SNPs.tab>)
+
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+
+
+impact.table_NRAS<-MMRFVariant_GetImpact(variant.ann,ListSNPs_NRAS$dbSNP)
+```
+For semplification purposes, we visualize a subset of columns and rows
+
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+impact.table_NRAS<-dplyr::select(impact.table_NRAS,dbSNP,Gene,REF,ALT,
+                                feature,Effect,SIFT_Impact,Polyphen_Impact,Impact)
+
+head(unique(impact.table_NRAS),10)  
+
+
+```
+
+
+```{r figurename="ImpactTable_NRAS", echo=FALSE, fig.cap="Impact table of each SNP in NRAS", out.width = '90%'}
+knitr::include_graphics("imgs/ImpactTable_NRAS.png")
+```
+
+
+## Plot the Impact-Effect of SNPs in NRAS gene
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+
+
+
+plot.impact.effect_NRAS<-MMRFVariant_PlotbyEffectImpact(variant.ann,ListSNPs_NRAS,topN=50,height=30, 
+                                                         width=15, filenm="PlotbyEffectImpact_NRAS")
+
+
+```
+
+
+
+
+```{r figurename="ImpactTable", echo=FALSE, fig.cap="Impact table of each SNP in ListGene", out.width = '90%'}
+knitr::include_graphics("imgs/PlotbyEffectImpact_NRAS.png")
+```
+
+
+
+
+
+
+
+
+
+
+
+## KM Survival curves in NRAS gene
+ (!) SNPs in <ListSNPs_NRAS> are discarded if:
+     a) only a group with respect to FilterBy parameter is found
+     b) pvalue is>=0.05
+
+```{r results = 'hide', message=FALSE, warning=FALSE, eval = F}
+
+NRAS_SNPs.treat<-c("rs11554290","rs121913254","rs121913237", "rs121913255")
+
+NRAS_surv.treatment<-MMRFVariant_SurvivalKM(patient,  
+                                            trt,
+                                            variant.ann,
+                                            NRAS_SNPs.treat,
+                                            FilterBy="Treatment", 
+                                            filename="KM_Plot_NRAS_treatment",
+                                            xlim = c(100,3000),
+                                            height=22,
+                                            width=12,
+                                            conf.range = FALSE,
+                                            color = c("Dark2"))
+
+
+
+
+
+
+
+
+NRAS_surv.Effect<-MMRFVariant_SurvivalKM(patient,  #no significant results are found (all pvalue>0.05)
+                                         trt,
+                                         variant.ann,
+                                         ListSNPs_NRAS,
+                                         FilterBy="Effect", 
+                                         filename="KM_Plot_NRAS_effect",
+                                         xlim = c(100,100),
+                                         height=22,
+                                         width=12,
+                                         conf.range = FALSE,
+                                         color = c("Dark2"))
+
+
+# see (*)
+
+NRAS_SNPs.stage<-c("rs121913254")
+NRAS_surv.Stage<-MMRFVariant_SurvivalKM(patient,  
+                                        trt,
+                                        variant.ann,
+                                        NRAS_SNPs.stage,
+                                        FilterBy="Stage", 
+                                        filename="KM_Plot_NRAS_stage",
+                                        xlim = c(100,3000),
+                                        height=22,
+                                        width=12,
+                                        conf.range = FALSE,
+                                        color = c("Dark2"))
+
+
+
+
+
+
+# see (*)
+NRAS_SNPs.bestresp<-c("rs11554290","rs121913254","rs121434595", "rs121913237")
+NRAS_surv.Bestresp<-MMRFVariant_SurvivalKM(patient,  
+                                           trt,
+                                           variant.ann,
+                                           NRAS_SNPs.bestresp,
+                                           FilterBy="Bestresp", 
+                                           filename="KM_Plot_NRAS_bestresp",
+                                           xlim = c(100,3000),
+                                           height=22,
+                                           width=12,
+                                           conf.range = FALSE,
+                                           color = c("Dark2"))
+
+
+
+
+
+
+
+# see (*)
+
+NRAS_surv.Gender<-MMRFVariant_SurvivalKM(patient,  #All SNPs have pvalue<=0.05
+                                         trt,
+                                         variant.ann,
+                                         ListSNPs_NRAS,
+                                         FilterBy="Gender", 
+                                         filename="KM_Plot_NRAS_gender",
+                                         xlim = c(100,3000),
+                                         height=22,
+                                         width=12,
+                                         conf.range = FALSE,
+                                         color = c("Dark2"))
+
+
+
+
+# see (*)
+
+NRAS_surv.Biotype<-MMRFVariant_SurvivalKM(patient,  #All SNPs have have only a group with respect to FilterBy parameter 
+                                          trt,
+                                          variant.ann,
+                                          ListSNPs_NRAS,
+                                          FilterBy="Biotype", 
+                                          filename="KM_Plot_NRAS_biotype",
+                                          xlim = c(100,3000),
+                                          height=22,
+                                          width=12,
+                                          conf.range = FALSE,
+                                          color = c("Dark2"))
+
+
+
+# see (*)
+NRAS_SNPs.ethnicity<-c("rs11554290","rs121913254","rs121913237")
+NRAS_surv.Ethnicity<-MMRFVariant_SurvivalKM(patient,  
+                                            trt,
+                                            variant.ann,
+                                            NRAS_SNPs.ethnicity,
+                                            FilterBy="Ethnicity", 
+                                            filename="KM_Plot_NRAS_ethnicity",
+                                            xlim = c(100,3000),
+                                            height=22,
+                                            width=12,
+                                            conf.range = FALSE,
+                                            color = c("Dark2"))
+
+
+
+
+
+
+
+
+
+
+
+```
+
+
+
+
+```{r figurename="ImpactTable", echo=FALSE, fig.cap="KM Survival curves in NRAS gene by ethnicity", out.width = '90%'}
+knitr::include_graphics("imgs/KM_Surv_ethnicity.png")
+```
+
+```{r figurename="ImpactTable", echo=FALSE, fig.cap="KM Survival curves in NRAS gene by bestresp", out.width = '90%'}
+knitr::include_graphics("imgs/KM_Surv_bestresp.png")
+```
+
+
+```{r figurename="ImpactTable", echo=FALSE, fig.cap="KM Survival curves in NRAS gene by stage", out.width = '90%'}
+knitr::include_graphics("imgs/KM_Surv_stage.png")
+```
+
+
+
+```{r figurename="ImpactTable", echo=FALSE, fig.cap="KM Survival curves in NRAS gene by treatment", out.width = '90%'}
+knitr::include_graphics("imgs/KM_Surv_treatment.png")
+```
+
+
+
