@@ -11,6 +11,7 @@ library(formattable)
 
 
 
+
 patient<-MMRF_CoMMpass_IA15_PER_PATIENT
 trt<-MMRF_CoMMpass_IA15_STAND_ALONE_TRTRESP
 variant.ann<-MMRF_CoMMpass_IA15a_All_Canonical_Variants
